@@ -17,6 +17,11 @@ type AggregateDsl struct {
 type FieldAggregate struct {
 	Field string `json:"field"`
 	Size  *int   `json:"size,omitempty"`
+	Order *FieldOrder `json:"order,omitempty"`
+}
+
+type FieldOrder struct {
+	Term string `json:"_term"`
 }
 
 /**
@@ -157,6 +162,12 @@ func (d *AggregateDsl) TermsWithSize(field string, size int) *AggregateDsl {
 	return d
 }
 
+func (d *AggregateDsl) TermsWithSizeAndOrder(field string, size int, order string) *AggregateDsl {
+	d.Type = FieldAggregate{ Field: field, Size: &size, Order: &FieldOrder{ Term: "asc" } }
+	d.TypeName = "terms"
+	return d
+}
+
 func (d *AggregateDsl) SignificantTerms(field string) *AggregateDsl {
 	d.Type = FieldAggregate{Field: field}
 	d.TypeName = "significant_terms"
@@ -186,6 +197,35 @@ func (d *AggregateDsl) DateHistogram(field, interval string) *AggregateDsl {
 	d.Type = DateHistogram{
 		Field:    field,
 		Interval: interval,
+	}
+	d.TypeName = "date_histogram"
+	return d
+}
+
+// Force buckets, empty or not, to be generated for all units in interval
+type MaximalDateHistogram struct {
+	Field    string `json:"field"`
+	Interval string `json:"interval"`
+	Format   string `json:"format,omitempty"`
+	MinDocCount int `json:"min_doc_count"`
+	ExtendedBounds MaximalDateHistogramExtendedBounds `json:"extended_bounds"`
+}
+
+type MaximalDateHistogramExtendedBounds struct{
+	Min string `json:"min"`
+	Max string `json:"max"`
+}
+
+func (d *AggregateDsl) MaximalDateHistogram(field, interval, format string, bounds_min, bounds_max string) *AggregateDsl {
+	d.Type = MaximalDateHistogram{
+		Field: field,
+		Interval: interval,
+		Format: format,
+		MinDocCount: 0,
+		ExtendedBounds: MaximalDateHistogramExtendedBounds{
+			Min: bounds_min,
+			Max: bounds_max,
+		},
 	}
 	d.TypeName = "date_histogram"
 	return d

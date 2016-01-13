@@ -142,6 +142,35 @@ func (f *FilterWrap) MarshalJSON() ([]byte, error) {
 
 */
 
+type BoolQuery struct {
+	MustFilters   []*FilterOp `json:"must,omitempty"`
+	ShouldFilters []*FilterOp `json:"should,omitempty"`
+}
+
+func NewBool() *BoolQuery {
+	return &BoolQuery{}
+}
+
+func (boolQuery *BoolQuery) Must(filters ...*FilterOp) *BoolQuery {
+	if len(boolQuery.ShouldFilters) == 0 {
+		boolQuery.MustFilters = filters[:]
+	} else {
+		boolQuery.MustFilters = append(boolQuery.ShouldFilters, filters...)
+	}
+
+	return boolQuery
+}
+
+func (boolQuery *BoolQuery) Should(filters ...*FilterOp) *BoolQuery {
+	if len(boolQuery.ShouldFilters) == 0 {
+		boolQuery.ShouldFilters = filters[:]
+	} else {
+		boolQuery.ShouldFilters = append(boolQuery.ShouldFilters, filters...)
+	}
+
+	return boolQuery
+}
+
 
 // Filter creates a blank FilterOp that can be customized with further function calls
 // This is the starting point for constructing any filter query
@@ -182,6 +211,7 @@ type FilterOp struct {
 	ScriptProp      *ScriptFilter          `json:"script,omitempty"`
 	GeoDistMap      map[string]interface{} `json:"geo_distance,omitempty"`
 	GeoDistRangeMap map[string]interface{} `json:"geo_distance_range,omitempty"`
+	BoolProp        *BoolQuery             `json:"bool,omitempty"`
 }
 
 type propertyPathMarker struct {
@@ -288,6 +318,12 @@ func (f *FilterOp) Not(filters ...*FilterOp) *FilterOp {
 	} else {
 		f.NotFilters = append(f.NotFilters, filters...)
 	}
+
+	return f
+}
+
+func (f *FilterOp) Bool(boolQuery *BoolQuery) *FilterOp {
+	f.BoolProp = boolQuery
 
 	return f
 }
