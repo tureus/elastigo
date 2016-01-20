@@ -163,7 +163,7 @@ func (d *AggregateDsl) TermsWithSize(field string, size int) *AggregateDsl {
 }
 
 func (d *AggregateDsl) TermsWithSizeAndOrder(field string, size int, order string) *AggregateDsl {
-	d.Type = FieldAggregate{ Field: field, Size: &size, Order: &FieldOrder{ Term: "asc" } }
+	d.Type = FieldAggregate{ Field: field, Size: &size, Order: &FieldOrder{ Term: order } }
 	d.TypeName = "terms"
 	return d
 }
@@ -212,11 +212,11 @@ type MaximalDateHistogram struct {
 }
 
 type MaximalDateHistogramExtendedBounds struct{
-	Min string `json:"min"`
-	Max string `json:"max"`
+	Min interface{} `json:"min"`
+	Max interface{} `json:"max"`
 }
 
-func (d *AggregateDsl) MaximalDateHistogram(field, interval, format string, bounds_min, bounds_max string) *AggregateDsl {
+func (d *AggregateDsl) MaximalDateHistogram(field, interval, format string, bounds_min, bounds_max interface{}) *AggregateDsl {
 	d.Type = MaximalDateHistogram{
 		Field: field,
 		Interval: interval,
@@ -228,6 +228,18 @@ func (d *AggregateDsl) MaximalDateHistogram(field, interval, format string, boun
 		},
 	}
 	d.TypeName = "date_histogram"
+	return d
+}
+
+type NestedPath struct {
+	Path string `json:"path"`
+}
+
+func (d *AggregateDsl) NestedPath(path string) *AggregateDsl {
+	d.Type = NestedPath{
+		Path: path,
+	}
+	d.TypeName = "nested"
 	return d
 }
 
