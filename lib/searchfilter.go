@@ -143,8 +143,9 @@ func (f *FilterWrap) MarshalJSON() ([]byte, error) {
 */
 
 type BoolQuery struct {
-	MustFilters   []*FilterOp `json:"must,omitempty"`
-	ShouldFilters []*FilterOp `json:"should,omitempty"`
+	MustFilters    []*FilterOp `json:"must,omitempty"`
+	ShouldFilters  []*FilterOp `json:"should,omitempty"`
+	MustNotFilters []*FilterOp `json:"must_not,omitempty"`
 }
 
 func NewBool() *BoolQuery {
@@ -152,10 +153,10 @@ func NewBool() *BoolQuery {
 }
 
 func (boolQuery *BoolQuery) Must(filters ...*FilterOp) *BoolQuery {
-	if len(boolQuery.ShouldFilters) == 0 {
+	if len(boolQuery.MustFilters) == 0 {
 		boolQuery.MustFilters = filters[:]
 	} else {
-		boolQuery.MustFilters = append(boolQuery.ShouldFilters, filters...)
+		boolQuery.MustFilters = append(boolQuery.MustFilters, filters...)
 	}
 
 	return boolQuery
@@ -166,6 +167,16 @@ func (boolQuery *BoolQuery) Should(filters ...*FilterOp) *BoolQuery {
 		boolQuery.ShouldFilters = filters[:]
 	} else {
 		boolQuery.ShouldFilters = append(boolQuery.ShouldFilters, filters...)
+	}
+
+	return boolQuery
+}
+
+func (boolQuery *BoolQuery) MustNot(filters ...*FilterOp) *BoolQuery {
+	if len(boolQuery.MustNotFilters) == 0 {
+		boolQuery.MustNotFilters = filters[:]
+	} else {
+		boolQuery.MustNotFilters = append(boolQuery.MustNotFilters, filters...)
 	}
 
 	return boolQuery
