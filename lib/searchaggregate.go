@@ -231,6 +231,38 @@ func (d *AggregateDsl) MaximalDateHistogram(field, interval, format string, boun
 	return d
 }
 
+// Force buckets, empty or not, to be generated for all units in interval from indexed script
+type MaximalDateHistogramFromIndexedScriptParams struct {
+	Interval int `json:"interval"`
+}
+type MaximalDateHistogramFromIndexedScript struct {
+	ScriptId    string `json:"script_id"`
+	Interval string `json:"interval"`
+	Params MaximalDateHistogramFromIndexedScriptParams `json:"params"`
+	Format   string `json:"format,omitempty"`
+	MinDocCount int `json:"min_doc_count"`
+	ExtendedBounds MaximalDateHistogramExtendedBounds `json:"extended_bounds"`
+}
+
+func (d *AggregateDsl) MaximalDateHistogramFromIndexedScript(script_id, interval string, interval_s int, format string, bounds_min, bounds_max interface{}) *AggregateDsl {
+	d.Type = MaximalDateHistogramFromIndexedScript{
+		ScriptId: script_id,
+		Interval: interval,
+		Params: MaximalDateHistogramFromIndexedScriptParams {
+			Interval: interval_s,
+		},
+		Format: format,
+		MinDocCount: 0,
+		ExtendedBounds: MaximalDateHistogramExtendedBounds{
+			Min: bounds_min,
+			Max: bounds_max,
+		},
+	}
+	d.TypeName = "date_histogram"
+	return d
+}
+
+
 type NestedPath struct {
 	Path string `json:"path"`
 }
