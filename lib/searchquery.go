@@ -57,6 +57,7 @@ some ways to serialize
 type QueryDsl struct {
 	QueryEmbed
 	FilterVal *FilterOp `json:"filter,omitempty"`
+	BoolVal *BoolQuery `json:"bool,omitempty"`
 }
 
 // The core Query Syntax can be embedded as a child of a variety of different parents
@@ -94,6 +95,13 @@ func (qd *QueryDsl) MarshalJSON() ([]byte, error) {
 			return filterB, err
 		}
 		return []byte(fmt.Sprintf(`{"filtered": {"filter":%s}}`, filterB)), nil
+	} else if qd.BoolVal != nil {
+		boolB, err := json.Marshal(qd.BoolVal)
+		if err != nil {
+			return boolB, err
+		}
+
+		return []byte(fmt.Sprintf(`{"bool": %s}`, boolB)), nil
 	}
 	return json.Marshal(q)
 }
@@ -101,6 +109,12 @@ func (qd *QueryDsl) MarshalJSON() ([]byte, error) {
 // get all
 func (q *QueryDsl) All() *QueryDsl {
 	q.MatchAll = &MatchAll{""}
+	return q
+}
+
+// set bool val
+func (q *QueryDsl) Bool(b *BoolQuery) *QueryDsl {
+	q.BoolVal = b
 	return q
 }
 

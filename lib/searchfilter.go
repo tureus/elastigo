@@ -146,10 +146,16 @@ type BoolQuery struct {
 	MustFilters    []*FilterOp `json:"must,omitempty"`
 	ShouldFilters  []*FilterOp `json:"should,omitempty"`
 	MustNotFilters []*FilterOp `json:"must_not,omitempty"`
+	MinShouldMatch *int        `json:"minimum_should_match,omitempty"`
 }
 
 func NewBool() *BoolQuery {
 	return &BoolQuery{}
+}
+
+func (boolQuery *BoolQuery) MinimumShouldMatch(num int) *BoolQuery {
+	boolQuery.MinShouldMatch = &num
+	return boolQuery
 }
 
 func (boolQuery *BoolQuery) Must(filters ...*FilterOp) *BoolQuery {
@@ -210,6 +216,7 @@ func CompoundFilter(fl ...interface{}) *FilterWrap {
 type FilterOp struct {
 	TermsMap        map[string]interface{} `json:"terms,omitempty"`
 	TermMap         map[string]interface{} `json:"term,omitempty"`
+	MatchMap        map[string]interface{} `json:"match,omitempty"`
 	RangeMap        map[string]RangeFilter `json:"range,omitempty"`
 	ExistsProp      *propertyPathMarker    `json:"exists,omitempty"`
 	MissingProp     *propertyPathMarker    `json:"missing,omitempty"`
@@ -223,6 +230,7 @@ type FilterOp struct {
 	GeoDistMap      map[string]interface{} `json:"geo_distance,omitempty"`
 	GeoDistRangeMap map[string]interface{} `json:"geo_distance_range,omitempty"`
 	BoolProp        *BoolQuery             `json:"bool,omitempty"`
+	QueryProp       *FilterOp      `json:"query,omitempty"`
 }
 
 type propertyPathMarker struct {
@@ -299,6 +307,18 @@ func (f *FilterOp) Term(field string, value interface{}) *FilterOp {
 	return f
 }
 
+// Term will add a term to the filter.
+// Multiple Term filters can be added, and ES will OR them.
+// If the term already exists in the FilterOp, the value will be overridden.
+func (f *FilterOp) Match(field string, value interface{}) *FilterOp {
+	if len(f.TermMap) == 0 {
+		f.MatchMap = make(map[string]interface{})
+	}
+
+	f.MatchMap[field] = value
+	return f
+}
+
 // And will add an AND op to the filter. One or more FilterOps can be passed in.
 func (f *FilterOp) And(filters ...*FilterOp) *FilterOp {
 	if len(f.AndFilters) == 0 {
@@ -335,6 +355,16 @@ func (f *FilterOp) Not(filters ...*FilterOp) *FilterOp {
 
 func (f *FilterOp) Bool(boolQuery *BoolQuery) *FilterOp {
 	f.BoolProp = boolQuery
+
+	return f
+}
+
+type XavierFilterWrap struct {
+	Filter *FilterOp `json:"query"`
+}
+
+func (f *FilterOp) Query(toWrap *FilterOp) *FilterOp {
+	f.QueryProp = toWrap
 
 	return f
 }

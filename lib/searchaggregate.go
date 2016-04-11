@@ -65,6 +65,16 @@ func (d *AggregateDsl) Sum(field string) *AggregateDsl {
 	return d
 }
 
+type DerivativeAggregate struct {
+	BucketsPath string `json:"buckets_path"`
+}
+
+func (d *AggregateDsl) CumulativeSum(path string) *AggregateDsl {
+	d.Type = DerivativeAggregate{BucketsPath: path}
+	d.TypeName = "cumulative_sum"
+	return d
+}
+
 func (d *AggregateDsl) Avg(field string) *AggregateDsl {
 	d.Type = FieldAggregate{Field: field}
 	d.TypeName = "avg"
@@ -121,6 +131,21 @@ func (d *AggregateDsl) Cardinality(field string, rehash bool, threshold int) *Ag
 	}
 	d.Type = c
 	d.TypeName = "cardinality"
+	return d
+}
+
+type GeohashGrid struct {
+	Field string `json:"field"`
+	Precision int `json:"precision"`
+}
+
+func (d *AggregateDsl) GeohashGrid(field string, precision int) *AggregateDsl {
+	d.TypeName = "geohash_grid"
+	d.Type = GeohashGrid {
+		Field: field,
+		Precision: precision,
+	}
+
 	return d
 }
 
@@ -208,6 +233,7 @@ type MaximalDateHistogram struct {
 	Interval string `json:"interval"`
 	Format   string `json:"format,omitempty"`
 	MinDocCount int `json:"min_doc_count"`
+	TimeZone string `json:"time_zone,omitempty"`
 	ExtendedBounds MaximalDateHistogramExtendedBounds `json:"extended_bounds"`
 }
 
@@ -216,11 +242,12 @@ type MaximalDateHistogramExtendedBounds struct{
 	Max interface{} `json:"max"`
 }
 
-func (d *AggregateDsl) MaximalDateHistogram(field, interval, format string, bounds_min, bounds_max interface{}) *AggregateDsl {
+func (d *AggregateDsl) MaximalDateHistogram(field, interval, format, timezone string, bounds_min, bounds_max interface{}) *AggregateDsl {
 	d.Type = MaximalDateHistogram{
 		Field: field,
 		Interval: interval,
 		Format: format,
+		TimeZone: timezone,
 		MinDocCount: 0,
 		ExtendedBounds: MaximalDateHistogramExtendedBounds{
 			Min: bounds_min,
